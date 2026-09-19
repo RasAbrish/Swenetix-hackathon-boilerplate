@@ -2,7 +2,7 @@ import { DragEvent } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { deleteTask } from "../features/tasks/tasksThunks";
 import { isTempId } from "../lib/outbox";
-import type { Task } from "../type";
+import type { Task } from "../types";
 
 interface Props {
   task: Task;
