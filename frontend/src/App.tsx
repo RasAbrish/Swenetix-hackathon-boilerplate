@@ -1,44 +1,49 @@
-import { useSelector, useDispatch } from "react-redux";
-import {
-  increment,
-  decrement,
-  setMessage,
-  reset,
-} from "./features/generic/genericSlice";
-import type { RootState, AppDispatch } from "./app/store";
+import { useState } from "react";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
+import { logout } from "./features/auth/authSlice";
+import { useRealtime } from "./features/realtime/useRealtime";
+import AuthForm from "./components/AuthForm";
+import Board from "./components/Board";
+import PresenceBar from "./components/PresenceBar";
+import SyncStatus from "./components/SyncStatus";
+import TaskModal from "./components/TaskModal";
 
-function App() {
-  const count = useSelector((state: RootState) => state.generic.count);
-  const message = useSelector((state: RootState) => state.generic.message);
-  const dispatch: AppDispatch = useDispatch();
+function BoardPage() {
+  const dispatch = useAppDispatch();
+  const { user, token } = useAppSelector((s) => s.auth);
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+
+  useRealtime(token);
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Redux Starter</h1>
-      <p>{message}</p>
-      <p>Count: {count}</p>
+    <div className="app">
+      <header className="topbar">
+        <h1>Task Board</h1>
+        <PresenceBar />
+        <div className="user">
+          <span>{user?.username}</span>
+          <button className="secondary" onClick={() => dispatch(logout())}>
+            Log out
+          </button>
+        </div>
+      </header>
 
-      <button onClick={() => dispatch(increment())}>Increment</button>
-      <button
-        onClick={() => dispatch(decrement())}
-        style={{ marginLeft: "0.5rem" }}
-      >
-        Decrement
-      </button>
-      <button
-        onClick={() => dispatch(setMessage("Redux Toolkit is active"))}
-        style={{ marginLeft: "0.5rem" }}
-      >
-        Set message
-      </button>
-      <button
-        onClick={() => dispatch(reset())}
-        style={{ marginLeft: "0.5rem" }}
-      >
-        Reset
-      </button>
+      <SyncStatus />
+
+      <Board onOpen={setOpenTaskId} />
+
+      {openTaskId && <TaskModal taskId={openTaskId} onClose={() => setOpenTaskId(null)} />}
     </div>
   );
+}
+
+function App() {
+  const { user, status } = useAppSelector((s) => s.auth);
+
+  if (status === "checking") {
+    return <div className="center muted">Loading...</div>;
+  }
+  return user ? <BoardPage /> : <AuthForm />;
 }
 
 export default App;
